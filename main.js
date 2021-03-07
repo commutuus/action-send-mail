@@ -42,7 +42,12 @@ async function main() {
         const cc = core.getInput("cc", { required: false })
         const bcc = core.getInput("bcc", { required: false })
         const contentType = core.getInput("content_type", { required: true })
-        const attachments = core.getInput("attachments", { required: false })
+        const attachments = core.getInput("attachments", { required: false });
+        const mappedAttachments = attachments ? JSON.parse(attachments).map((attachment) => ({
+            filename: attachment.fileName,
+            content: attachment.data,
+            encoding: 'base64'
+        })) : undefined;
         const convertMarkdown = core.getInput("convert_markdown", { required: false })
 
         const transport = nodemailer.createTransport({
@@ -63,7 +68,7 @@ async function main() {
             subject: subject,
             text: contentType != "text/html" ? getBody(body, convertMarkdown) : undefined,
             html: contentType == "text/html" ? getBody(body, convertMarkdown) : undefined,
-            attachments: attachments ? attachments.split(',').map(f => ({ path: f.trim() })) : undefined
+            attachments: mappedAttachments
         })
     } catch (error) {
         core.setFailed(error.message)
